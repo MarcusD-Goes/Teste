@@ -1,47 +1,114 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arcana · Tiragem de Tarô</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1e1b8f">
+  <meta name="description" content="Mapa colaborativo de acessibilidade urbana: marque calçadas ruins, rampas, falhas de iluminação e obstáculos.">
+  <title>Trilha Livre · Mapa colaborativo de acessibilidade urbana</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="topo">
-  <h1>Arcana</h1>
-  <p>Respire, firme a pergunta na mente e escolha como as cartas vão falar.</p>
-</header>
+  <a class="skip" href="#map">Ir para o mapa</a>
 
-<main>
-  <section class="mesa" aria-labelledby="t-tiragem">
-    <h2 id="t-tiragem">Escolha a tiragem</h2>
-    <div id="modos" class="modos" role="radiogroup" aria-label="Modo de tiragem"></div>
-    <p id="descricao" class="descricao"></p>
-
-    <div class="controles">
-      <label class="check"><input type="checkbox" id="invertidas" checked> Permitir cartas invertidas</label>
-      <button id="tirar" class="btn">Embaralhar e tirar</button>
-      <button id="revelar" class="btn sec" disabled>Revelar todas</button>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#fff" fill-opacity=".16"/><path d="M16 5a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" fill="#fff"/></svg>
+      <div><strong>Trilha Livre</strong><span>Acessibilidade urbana colaborativa</span></div>
     </div>
+    <label class="role">
+      <span>Perfil</span>
+      <select id="roleSelect" aria-label="Perfil de acesso">
+        <option value="visitor">Visitante</option>
+        <option value="contributor">Colaborador</option>
+        <option value="moderator">Moderador</option>
+      </select>
+    </label>
+  </header>
 
-    <div id="tiragem" class="tiragem" aria-live="polite"></div>
-  </section>
+  <main class="layout">
+    <section class="map-wrap" aria-label="Mapa">
+      <div id="map" role="application" aria-label="Mapa de ocorrências de acessibilidade"></div>
 
-  <section class="baralho" aria-labelledby="t-baralho">
-    <h2 id="t-baralho">O baralho completo (78 cartas)</h2>
-    <div id="filtros" class="filtros"></div>
-    <div id="galeria" class="galeria"></div>
-  </section>
-</main>
+      <div class="chips" id="filters" role="group" aria-label="Filtrar por categoria"></div>
 
-<dialog id="detalhe">
-  <div id="detalhe-corpo"></div>
-  <button class="btn sec" id="fechar">Fechar</button>
-</dialog>
+      <div class="pick-banner" id="pickBanner" hidden>
+        <p>Toque no mapa para marcar o local.</p>
+        <div>
+          <button class="btn btn-light" id="pickGps" type="button">Usar minha localização</button>
+          <button class="btn btn-ghost" id="pickCancel" type="button">Cancelar</button>
+        </div>
+      </div>
 
-<footer>Ilustrações: baralho Rider–Waite–Smith (1909), de Pamela Colman Smith, em domínio público, carregadas do Wikimedia Commons. Tarô é uma ferramenta de reflexão e entretenimento.</footer>
-<script src="script.js"></script>
+      <div class="map-actions">
+        <button class="round" id="locateBtn" type="button" aria-label="Centralizar na minha localização">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        </button>
+        <button class="fab" id="addBtn" type="button">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Registrar ocorrência
+        </button>
+      </div>
+    </section>
+
+    <aside class="panel" id="panel" aria-label="Ocorrências">
+      <button class="handle" id="handle" type="button" aria-expanded="false" aria-controls="panelBody">
+        <span class="grip"></span>
+        <span id="handleLabel">Ocorrências</span>
+      </button>
+      <div class="panel-body" id="panelBody">
+        <div class="stats" id="stats"></div>
+        <div class="tabs" role="tablist">
+          <button role="tab" class="tab is-active" data-tab="list" aria-selected="true">Ocorrências</button>
+          <button role="tab" class="tab" data-tab="mod" id="modTab" aria-selected="false" hidden>Moderação <b id="modCount">0</b></button>
+        </div>
+        <ul class="list" id="list"></ul>
+        <ul class="list" id="modList" hidden></ul>
+      </div>
+    </aside>
+  </main>
+
+  <dialog id="reportDialog">
+    <form id="reportForm" method="dialog" novalidate>
+      <header>
+        <h2>Nova ocorrência</h2>
+        <button type="button" class="close" id="closeDialog" aria-label="Fechar">×</button>
+      </header>
+
+      <fieldset>
+        <legend>Categoria</legend>
+        <div class="cat-grid" id="catGrid"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Gravidade</legend>
+        <div class="seg" id="sevGrid">
+          <label><input type="radio" name="sev" value="1"><span>Baixa</span></label>
+          <label><input type="radio" name="sev" value="2" checked><span>Média</span></label>
+          <label><input type="radio" name="sev" value="3"><span>Alta</span></label>
+        </div>
+      </fieldset>
+
+      <label class="field">
+        <span>Descrição</span>
+        <textarea id="desc" rows="3" maxlength="280" placeholder="Ex.: rampa sem inclinação adequada, degrau de 15 cm na saída."></textarea>
+        <small id="descHelp">Mínimo de 10 caracteres.</small>
+      </label>
+
+      <p class="coords" id="coords"></p>
+      <p class="notice" id="notice"></p>
+
+      <footer>
+        <button type="button" class="btn btn-ghost-dark" id="cancelForm">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Enviar ocorrência</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
