@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arcana · Tiragem de Tarô</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topo">
+  <h1>Arcana</h1>
+  <p>Respire, firme a pergunta na mente e escolha como as cartas vão falar.</p>
+</header>
+
+<main>
+  <section class="mesa" aria-labelledby="t-tiragem">
+    <h2 id="t-tiragem">Escolha a tiragem</h2>
+    <div id="modos" class="modos" role="radiogroup" aria-label="Modo de tiragem"></div>
+    <p id="descricao" class="descricao"></p>
+
+    <div class="controles">
+      <label class="check"><input type="checkbox" id="invertidas" checked> Permitir cartas invertidas</label>
+      <button id="tirar" class="btn">Embaralhar e tirar</button>
+      <button id="revelar" class="btn sec" disabled>Revelar todas</button>
+    </div>
+
+    <div id="tiragem" class="tiragem" aria-live="polite"></div>
+  </section>
+
+  <section class="baralho" aria-labelledby="t-baralho">
+    <h2 id="t-baralho">O baralho completo (78 cartas)</h2>
+    <div id="filtros" class="filtros"></div>
+    <div id="galeria" class="galeria"></div>
+  </section>
+</main>
+
+<dialog id="detalhe">
+  <div id="detalhe-corpo"></div>
+  <button class="btn sec" id="fechar">Fechar</button>
+</dialog>
+
+<footer>Ilustrações: baralho Rider–Waite–Smith (1909), de Pamela Colman Smith, em domínio público, carregadas do Wikimedia Commons. Tarô é uma ferramenta de reflexão e entretenimento.</footer>
+<script src="script.js"></script>
+</body>
+</html>
